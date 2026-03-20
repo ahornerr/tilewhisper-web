@@ -29,18 +29,48 @@
 			color: var(--text-primary);
 			line-height: 1.6;
 			overflow-x: hidden;
+			min-height: 100vh;
 		}
 
-		/* Subtle stone texture overlay */
-		body::before {
-			content: '';
+		/* Parallax background layers */
+		.parallax-container {
 			position: fixed;
 			inset: 0;
+			z-index: -2;
+			perspective: 1000px;
+			overflow: hidden;
+		}
+
+		.parallax-layer {
+			position: absolute;
+			inset: 0;
+			will-change: transform;
+			transition: transform 0.15s ease-out;
+		}
+
+		/* Layer 1: Base stone texture */
+		.layer-bg {
 			background:
-				radial-gradient(circle at 20% 30%, rgba(212, 168, 23, 0.03) 0%, transparent 50%),
-				linear-gradient(180deg, rgba(0, 0, 0, 0.4) 0%, transparent 100%);
-			pointer-events: none;
-			z-index: -1;
+				radial-gradient(circle at 30% 40%, rgba(212, 168, 23, 0.02) 0%, transparent 70%),
+				linear-gradient(180deg, rgba(0, 0, 0, 0.3) 0%, transparent 100%);
+			opacity: 0.6;
+		}
+
+		/* Layer 2: Subtle grid pattern */
+		.layer-grid {
+			background-image:
+				linear-gradient(rgba(212, 168, 23, 0.03) 1px, transparent 1px),
+				linear-gradient(90deg, rgba(212, 168, 23, 0.03) 1px, transparent 1px);
+			background-size: 60px 60px;
+			opacity: 0.3;
+		}
+
+		/* Layer 3: Floating particles */
+		.layer-particles {
+			background:
+				radial-gradient(circle at 70% 60%, rgba(212, 168, 23, 0.04) 0%, transparent 60%),
+				radial-gradient(circle at 20% 80%, rgba(212, 168, 23, 0.03) 0%, transparent 50%);
+			opacity: 0.4;
 		}
 
 		/* Noise grain */
@@ -49,10 +79,10 @@
 			position: fixed;
 			inset: 0;
 			background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/feTurbulence%3E%3C/filter%3E%3C/svg%3E");
-			opacity: 0.03;
+			opacity: 0.025;
 			pointer-events: none;
 			z-index: -1;
-			mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+			mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
 		}
 
 		.container {
@@ -81,7 +111,7 @@
 			color: var(--gold-bright);
 			margin-bottom: 1rem;
 			letter-spacing: -0.02em;
-			text-shadow: 0 4px 20px rgba(212, 168, 23, 0.4);
+			text-shadow: 0 4px 20px rgba(212, 168, 23, 0.4), 0 0 2px rgba(0, 0, 0, 0.8);
 		}
 
 		.hero-tagline {
@@ -107,6 +137,7 @@
 			box-shadow: 0 4px 20px var(--shadow-glow), 0 0 0 2px rgba(212, 168, 23, 0.3) inset;
 			position: relative;
 			overflow: hidden;
+			z-index: 10;
 		}
 
 		.cta-button::before {
@@ -119,8 +150,8 @@
 		}
 
 		.cta-button:hover {
-			transform: translateY(-2px);
-			box-shadow: 0 8px 30px rgba(212, 168, 23, 0.3);
+			transform: translateY(-2px) scale(1.02);
+			box-shadow: 0 8px 30px rgba(212, 168, 23, 0.4);
 		}
 
 		.cta-button:hover::before {
@@ -136,6 +167,7 @@
 			padding: 6rem 0;
 			max-width: 900px;
 			margin: 0 auto;
+			position: relative;
 		}
 
 		.section-label {
@@ -346,6 +378,7 @@
 			border-top: 1px solid var(--border);
 			color: var(--text-muted);
 			font-size: 0.85rem;
+			position: relative;
 		}
 
 		footer a {
@@ -390,11 +423,19 @@
 
 		@media (prefers-reduced-motion: reduce) {
 			* { animation: none !important; transition: none !important; }
+			.parallax-layer { will-change: auto; }
 			.cta-button:hover { transform: none; }
 		}
 	</style>
 </head>
 <body>
+	<!-- Parallax Background -->
+	<div class="parallax-container" id="parallax-bg">
+		<div class="parallax-layer layer-bg" data-speed="0.02"></div>
+		<div class="parallax-layer layer-grid" data-speed="0.04"></div>
+		<div class="parallax-layer layer-particles" data-speed="0.06"></div>
+	</div>
+
 	<div class="container">
 		<!-- Hero -->
 		<section class="hero">
@@ -514,7 +555,7 @@
 		<!-- Install CTA -->
 		<section class="install-cta">
 			<h2>Ready to talk to nearby players?</h2>
-			<p>Both players need TileWhisper installed. It's free, open source, and ready in the RuneLite Plugin Hub.</p>
+			<p>Both players need TileWhisper installed. It's free, open source, and ready in RuneLite Plugin Hub.</p>
 			<div class="install-steps">
 				<a href="https://github.com/runelite/plugin-hub" target="_blank" class="install-step">
 					<strong>Get from Plugin Hub</strong>
@@ -532,5 +573,26 @@
 			<p>Built for Old School RuneScape · <a href="https://github.com/ahornerr/TileWhisper" target="_blank">Open Source</a> · <a href="https://github.com/ahornerr/TileWhisper/issues" target="_blank">Report Issues</a></p>
 		</footer>
 	</div>
+
+	<script>
+		// Parallax effect on mouse move
+		document.addEventListener('mousemove', (e) => {
+			const layers = document.querySelectorAll('.parallax-layer');
+			const x = (window.innerWidth / 2 - e.clientX) / window.innerWidth;
+			const y = (window.innerHeight / 2 - e.clientY) / window.innerHeight;
+
+			layers.forEach(layer => {
+				const speed = parseFloat(layer.dataset.speed || 0.05);
+				const moveX = x * speed * 30;
+				const moveY = y * speed * 30;
+				layer.style.transform = `translate3d(${moveX}px, ${moveY}px, 0)`;
+			});
+		});
+
+		// Disable parallax on touch devices
+		if ('ontouchstart' in window) {
+			document.getElementById('parallax-bg').style.display = 'none';
+		}
+	</script>
 </body>
 </html>
