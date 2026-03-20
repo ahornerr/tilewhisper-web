@@ -1,0 +1,6 @@
+services:
+  tilewhisper-web:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "2377:80"

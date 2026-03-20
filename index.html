@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>TileWhisper — Proximity Voice Chat for OSRS</title>
+	<style>
+		@import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=Space+Grotesk:wght@300;400;500;600&display=swap');
+
+		:root {
+			--bg-dark: #0d0e0f;
+			--bg-slate: #14181c;
+			--bg-card: #1a1e24;
+			--gold-primary: #d4a817;
+			--gold-bright: #ffb700;
+			--gold-dim: #8b6914;
+			--text-primary: #f0f4f8;
+			--text-secondary: #9ca3af;
+			--text-muted: #6b7280;
+			--border: #2d3748;
+			--shadow-glow: rgba(212, 168, 23, 0.15);
+		}
+
+		* { margin: 0; padding: 0; box-sizing: border-box; }
+
+		body {
+			font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+			background: var(--bg-dark);
+			color: var(--text-primary);
+			line-height: 1.6;
+			overflow-x: hidden;
+		}
+
+		/* Subtle stone texture overlay */
+		body::before {
+			content: '';
+			position: fixed;
+			inset: 0;
+			background:
+				radial-gradient(circle at 20% 30%, rgba(212, 168, 23, 0.03) 0%, transparent 50%),
+				linear-gradient(180deg, rgba(0, 0, 0, 0.4) 0%, transparent 100%);
+			pointer-events: none;
+			z-index: -1;
+		}
+
+		/* Noise grain */
+		body::after {
+			content: '';
+			position: fixed;
+			inset: 0;
+			background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/feTurbulence%3E%3C/filter%3E%3C/svg%3E");
+			opacity: 0.03;
+			pointer-events: none;
+			z-index: -1;
+			mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+		}
+
+		.container {
+			max-width: 1200px;
+			margin: 0 auto;
+			padding: 0 24px;
+			position: relative;
+			z-index: 1;
+		}
+
+		/* Hero Section */
+		.hero {
+			min-height: 90vh;
+			display: flex;
+			flex-direction: column;
+			justify-content: center;
+			align-items: center;
+			text-align: center;
+			position: relative;
+		}
+
+		.hero h1 {
+			font-family: 'Crimson Pro', Georgia, serif;
+			font-size: clamp(3rem, 8vw, 5.5rem);
+			font-weight: 700;
+			color: var(--gold-bright);
+			margin-bottom: 1rem;
+			letter-spacing: -0.02em;
+			text-shadow: 0 4px 20px rgba(212, 168, 23, 0.4);
+		}
+
+		.hero-tagline {
+			font-size: clamp(1.1rem, 2.5vw, 1.4rem);
+			color: var(--text-secondary);
+			max-width: 540px;
+			margin-bottom: 2.5rem;
+			font-weight: 300;
+		}
+
+		.cta-button {
+			display: inline-flex;
+			align-items: center;
+			gap: 0.75rem;
+			background: linear-gradient(135deg, var(--gold-primary) 0%, var(--gold-dim) 100%);
+			color: var(--bg-dark);
+			font-weight: 600;
+			font-size: 1rem;
+			padding: 1rem 2rem;
+			border-radius: 4px;
+			text-decoration: none;
+			transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+			box-shadow: 0 4px 20px var(--shadow-glow), 0 0 0 2px rgba(212, 168, 23, 0.3) inset;
+			position: relative;
+			overflow: hidden;
+		}
+
+		.cta-button::before {
+			content: '';
+			position: absolute;
+			inset: 0;
+			background: linear-gradient(45deg, transparent 40%, rgba(255, 255, 255, 0.1) 50%, transparent 60%);
+			transform: translateX(-100%);
+			transition: transform 0.6s ease;
+		}
+
+		.cta-button:hover {
+			transform: translateY(-2px);
+			box-shadow: 0 8px 30px rgba(212, 168, 23, 0.3);
+		}
+
+		.cta-button:hover::before {
+			transform: translateX(100%);
+		}
+
+		.cta-button .icon {
+			font-size: 1.2rem;
+		}
+
+		/* Sections */
+		section {
+			padding: 6rem 0;
+			max-width: 900px;
+			margin: 0 auto;
+		}
+
+		.section-label {
+			display: inline-block;
+			font-size: 0.75rem;
+			font-weight: 600;
+			text-transform: uppercase;
+			letter-spacing: 0.2em;
+			color: var(--gold-primary);
+			margin-bottom: 1rem;
+		}
+
+		section h2 {
+			font-family: 'Crimson Pro', Georgia, serif;
+			font-size: 2.25rem;
+			color: var(--text-primary);
+			margin-bottom: 1.5rem;
+		}
+
+		/* How It Works */
+		.steps {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+			gap: 2rem;
+			margin-top: 3rem;
+		}
+
+		.step {
+			background: var(--bg-card);
+			border: 1px solid var(--border);
+			border-radius: 8px;
+			padding: 1.75rem;
+			position: relative;
+			overflow: hidden;
+		}
+
+		.step::before {
+			content: '';
+			position: absolute;
+			top: 0;
+			left: 0;
+			right: 0;
+			height: 2px;
+			background: linear-gradient(90deg, var(--gold-primary) 0%, transparent 100%);
+		}
+
+		.step-number {
+			font-family: 'Crimson Pro', Georgia, serif;
+			font-size: 4rem;
+			font-weight: 700;
+			color: rgba(212, 168, 23, 0.1);
+			position: absolute;
+			top: -0.5rem;
+			right: 1rem;
+			line-height: 1;
+		}
+
+		.step h3 {
+			font-size: 1.1rem;
+			color: var(--text-primary);
+			margin-bottom: 0.75rem;
+		}
+
+		.step p {
+			color: var(--text-secondary);
+			font-size: 0.95rem;
+			line-height: 1.7;
+		}
+
+		/* Features */
+		.feature-list {
+			display: grid;
+			gap: 1.5rem;
+			margin-top: 3rem;
+		}
+
+		.feature {
+			display: flex;
+			gap: 1rem;
+			padding: 1.5rem;
+			background: var(--bg-card);
+			border: 1px solid var(--border);
+			border-radius: 6px;
+			align-items: flex-start;
+		}
+
+		.feature-icon {
+			flex-shrink: 0;
+			width: 44px;
+			height: 44px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			background: linear-gradient(135deg, rgba(212, 168, 23, 0.1) 0%, rgba(212, 168, 23, 0.05) 100%);
+			border-radius: 8px;
+			font-size: 1.4rem;
+		}
+
+		.feature-content h3 {
+			font-size: 1rem;
+			color: var(--text-primary);
+			margin-bottom: 0.5rem;
+		}
+
+		.feature-content p {
+			color: var(--text-secondary);
+			font-size: 0.9rem;
+			line-height: 1.6;
+		}
+
+		/* Privacy Section */
+		.privacy-box {
+			background: linear-gradient(135deg, var(--bg-slate) 0%, rgba(45, 55, 72, 0.3) 100%);
+			border: 1px solid var(--border);
+			border-radius: 12px;
+			padding: 2.5rem;
+			margin-top: 2rem;
+			position: relative;
+		}
+
+		.privacy-box::before {
+			content: '';
+			position: absolute;
+			top: -1px;
+			left: 20%;
+			right: 20%;
+			height: 1px;
+			background: var(--gold-dim);
+		}
+
+		.privacy-box h3 {
+			font-family: 'Crimson Pro', Georgia, serif;
+			font-size: 1.5rem;
+			color: var(--gold-primary);
+			margin-bottom: 1.5rem;
+		}
+
+		.privacy-points {
+			display: grid;
+			gap: 1.5rem;
+		}
+
+		.privacy-points > div {
+			display: flex;
+			gap: 1rem;
+		}
+
+		.privacy-icon {
+			color: var(--gold-dim);
+			flex-shrink: 0;
+		}
+
+		.privacy-points p {
+			color: var(--text-secondary);
+			font-size: 0.95rem;
+		}
+
+		/* Install CTA */
+		.install-cta {
+			text-align: center;
+			padding: 6rem 0;
+		}
+
+		.install-cta h2 {
+			font-family: 'Crimson Pro', Georgia, serif;
+			font-size: 2rem;
+			margin-bottom: 1.5rem;
+		}
+
+		.install-cta p {
+			color: var(--text-secondary);
+			max-width: 500px;
+			margin: 0 auto 2rem;
+		}
+
+		.install-steps {
+			display: inline-flex;
+			gap: 1.5rem;
+			flex-wrap: wrap;
+			justify-content: center;
+		}
+
+		.install-step {
+			background: var(--bg-card);
+			border: 1px solid var(--border);
+			border-radius: 6px;
+			padding: 1.25rem 1.75rem;
+			font-size: 0.95rem;
+			color: var(--text-secondary);
+			transition: all 0.3s ease;
+		}
+
+		.install-step:hover {
+			border-color: var(--gold-primary);
+			background: rgba(212, 168, 23, 0.05);
+		}
+
+		.install-step strong {
+			display: block;
+			color: var(--gold-bright);
+			margin-bottom: 0.25rem;
+		}
+
+		/* Footer */
+		footer {
+			text-align: center;
+			padding: 3rem 0;
+			border-top: 1px solid var(--border);
+			color: var(--text-muted);
+			font-size: 0.85rem;
+		}
+
+		footer a {
+			color: var(--gold-primary);
+			text-decoration: none;
+		}
+
+		footer a:hover {
+			color: var(--gold-bright);
+		}
+
+		/* Animations */
+		@keyframes fadeInUp {
+			from {
+				opacity: 0;
+				transform: translateY(20px);
+			}
+			to {
+				opacity: 1;
+				transform: translateY(0);
+			}
+		}
+
+		.animate-up {
+			animation: fadeInUp 0.8s ease-out forwards;
+		}
+
+		.delay-1 { animation-delay: 0.1s; }
+		.delay-2 { animation-delay: 0.2s; }
+		.delay-3 { animation-delay: 0.3s; }
+		.delay-4 { animation-delay: 0.4s; }
+
+		/* Responsive */
+		@media (max-width: 768px) {
+			.hero h1 { font-size: 2.5rem; }
+			.hero-tagline { font-size: 1rem; }
+			.step { text-align: center; }
+			.step::before { left: 50%; width: 60%; }
+			.step-number { right: 50%; transform: translateX(50%); }
+			.feature { flex-direction: column; text-align: center; }
+		}
+
+		@media (prefers-reduced-motion: reduce) {
+			* { animation: none !important; transition: none !important; }
+			.cta-button:hover { transform: none; }
+		}
+	</style>
+</head>
+<body>
+	<div class="container">
+		<!-- Hero -->
+		<section class="hero">
+			<h1 class="animate-up">TileWhisper</h1>
+			<p class="hero-tagline animate-up delay-1">Voice chat with nearby players — no accounts, no setup, just proximity.</p>
+			<a href="https://github.com/runelite/plugin-hub" target="_blank" class="cta-button animate-up delay-2">
+				<span>Get from Plugin Hub</span>
+				<span class="icon">→</span>
+			</a>
+		</section>
+
+		<!-- How It Works -->
+		<section>
+			<span class="section-label">How It Works</span>
+			<h2 class="animate-up delay-1">Install both, hear nearby</h2>
+			<p class="animate-up delay-2" style="color: var(--text-secondary); max-width: 600px; margin-bottom: 2rem;">
+				Both players need TileWhisper installed. When you're on the same OSRS world within 15 tiles (configurable), you can hear each other speak. Volume fades smoothly as you walk apart.
+			</p>
+			<div class="steps animate-up delay-3">
+				<div class="step">
+					<span class="step-number">01</span>
+					<h3>Install Plugin</h3>
+					<p>Get TileWhisper free from RuneLite Plugin Hub. Restart RuneLite — it just works.</p>
+				</div>
+				<div class="step">
+					<span class="step-number">02</span>
+					<h3>Configure Mic</h3>
+					<p>Open TileWhisper settings, choose Push-to-Talk or Voice Activity, set your key or sensitivity.</p>
+				</div>
+				<div class="step">
+					<span class="step-number">03</span>
+					<h3>Join World</h3>
+					<p>Any player on the same world with TileWhisper is in your voice channel. No invites, no friend requests.</p>
+				</div>
+			</div>
+		</section>
+
+		<!-- Features -->
+		<section>
+			<span class="section-label">Features</span>
+			<h2 class="animate-up">Built for OSRS proximity chat</h2>
+			<div class="feature-list">
+				<div class="feature">
+					<div class="feature-icon">🎤</div>
+					<div class="feature-content">
+						<h3>Push-to-Talk or Auto</h3>
+						<p>Hold V (configurable) to broadcast, or use Voice Activity Detection to auto-transmit when speaking.</p>
+					</div>
+				</div>
+				<div class="feature">
+					<div class="feature-icon">📍</div>
+					<div class="feature-content">
+						<h3>Proximity Audio</h3>
+						<p>Volume decreases linearly with Chebyshev distance — same math OSRS uses for tile movement. Feels natural.</p>
+					</div>
+				</div>
+				<div class="feature">
+					<div class="feature-icon">🔇</div>
+					<div class="feature-content">
+						<h3>Per-Player Controls</h3>
+						<p>Mute or adjust volume (0–200%) for each player individually. Speaking indicators show who's talking.</p>
+					</div>
+				</div>
+				<div class="feature">
+					<div class="feature-icon">💻</div>
+					<div class="feature-content">
+						<h3>Cross-Platform</h3>
+						<p>Pure Java Opus codec works on Linux, macOS (including Apple Silicon), and Windows equally well.</p>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- Privacy -->
+		<section>
+			<span class="section-label">Privacy & Transparency</span>
+			<h2 class="animate-up">We see exactly what we need to relay</h2>
+			<div class="privacy-box animate-up delay-1">
+				<h3>What the relay server sees</h3>
+				<div class="privacy-points">
+					<div>
+						<span class="privacy-icon">👤</span>
+						<p>Your OSRS username</p>
+					</div>
+					<div>
+						<span class="privacy-icon">📍</span>
+						<p>Approximate tile coordinates (world, x, y, plane)</p>
+					</div>
+					<div>
+						<span class="privacy-icon">🎤</span>
+						<p>Encoded audio (Opus at 32 kbps)</p>
+					</div>
+				</div>
+				<div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border);">
+					<p style="color: var(--text-primary); margin-bottom: 1rem;"><strong>What we don't do:</strong></p>
+					<div class="privacy-points">
+						<div>
+							<span class="privacy-icon">❌</span>
+							<p>Nothing is stored or logged</p>
+						</div>
+						<div>
+							<span class="privacy-icon">🌐</span>
+							<p>Audio is never broadcast globally — only to players on your world within range</p>
+						</div>
+						<div>
+							<span class="privacy-icon">🔐</span>
+							<p>No accounts, no signups, no tracking</p>
+						</div>
+					</div>
+				</div>
+				<p style="margin-top: 1.5rem; color: var(--text-muted); font-size: 0.85rem;">
+					Server source code is public. Both plugin and server are free to use and self-host if you prefer.
+				</p>
+			</div>
+		</section>
+
+		<!-- Install CTA -->
+		<section class="install-cta">
+			<h2>Ready to talk to nearby players?</h2>
+			<p>Both players need TileWhisper installed. It's free, open source, and ready in the RuneLite Plugin Hub.</p>
+			<div class="install-steps">
+				<a href="https://github.com/runelite/plugin-hub" target="_blank" class="install-step">
+					<strong>Get from Plugin Hub</strong>
+					Free — search "TileWhisper"
+				</a>
+				<a href="https://github.com/ahornerr/TileWhisper" target="_blank" class="install-step">
+					<strong>View Source</strong>
+					GitHub — open source
+				</a>
+			</div>
+		</section>
+
+		<!-- Footer -->
+		<footer>
+			<p>Built for Old School RuneScape · <a href="https://github.com/ahornerr/TileWhisper" target="_blank">Open Source</a> · <a href="https://github.com/ahornerr/TileWhisper/issues" target="_blank">Report Issues</a></p>
+		</footer>
+	</div>
+</body>
+</html>
