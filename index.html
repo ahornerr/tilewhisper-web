@@ -78,7 +78,7 @@
 			content: '';
 			position: fixed;
 			inset: 0;
-			background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/feTurbulence%3E%3C/filter%3E%3C/svg%3E");
+			background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
 			opacity: 0.025;
 			pointer-events: none;
 			z-index: -1;
@@ -95,13 +95,14 @@
 
 		/* Hero Section */
 		.hero {
-			min-height: 90vh;
+			min-height: 55vh;
 			display: flex;
 			flex-direction: column;
 			justify-content: center;
 			align-items: center;
 			text-align: center;
 			position: relative;
+			padding: 3rem 0;
 		}
 
 		.hero h1 {
@@ -163,8 +164,8 @@
 		}
 
 		/* Sections */
-		section {
-			padding: 6rem 0;
+		section:not(.hero) {
+			padding: 4rem 0;
 			max-width: 900px;
 			margin: 0 auto;
 			position: relative;
@@ -333,7 +334,7 @@
 
 		.install-cta h2 {
 			font-family: 'Crimson Pro', Georgia, serif;
-			font-size: 2rem;
+			font-size: 2.25rem;
 			margin-bottom: 1.5rem;
 		}
 
@@ -403,7 +404,11 @@
 		}
 
 		.animate-up {
-			animation: fadeInUp 0.8s ease-out forwards;
+			opacity: 0;
+		}
+
+		.animate-up.in-view {
+			animation: fadeInUp 0.8s ease-out both;
 		}
 
 		.delay-1 { animation-delay: 0.1s; }
@@ -416,7 +421,7 @@
 			.hero h1 { font-size: 2.5rem; }
 			.hero-tagline { font-size: 1rem; }
 			.step { text-align: center; }
-			.step::before { left: 50%; width: 60%; }
+			.step::before { left: 20%; width: 60%; }
 			.step-number { right: 50%; transform: translateX(50%); }
 			.feature { flex-direction: column; text-align: center; }
 		}
@@ -440,11 +445,21 @@
 		<!-- Hero -->
 		<section class="hero">
 			<h1 class="animate-up">TileWhisper</h1>
-			<p class="hero-tagline animate-up delay-1">Voice chat with nearby players — no accounts, no setup, just proximity.</p>
+			<p class="hero-tagline animate-up delay-1">Proximity voice chat for Old School RuneScape — no accounts, no setup, just talk.</p>
 			<a href="https://github.com/runelite/plugin-hub" target="_blank" class="cta-button animate-up delay-2">
 				<span>Get from Plugin Hub</span>
 				<span class="icon">→</span>
 			</a>
+			<div class="animate-up delay-3" style="display: flex; gap: 1.5rem; margin-top: 2rem; justify-content: center; flex-wrap: wrap;">
+				<div style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-secondary); font-size: 0.9rem;">
+					<span style="width: 7px; height: 7px; border-radius: 50%; background: #4caf76; box-shadow: 0 0 6px rgba(76,175,118,0.6); display: inline-block; flex-shrink: 0;"></span>
+					<span id="stat-players">—</span> players online
+				</div>
+				<div style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-secondary); font-size: 0.9rem;">
+					<span style="width: 7px; height: 7px; border-radius: 50%; background: #4caf76; box-shadow: 0 0 6px rgba(76,175,118,0.6); display: inline-block; flex-shrink: 0;"></span>
+					<span id="stat-worlds">—</span> active worlds
+				</div>
+			</div>
 		</section>
 
 		<!-- How It Works -->
@@ -467,7 +482,7 @@
 				</div>
 				<div class="step">
 					<span class="step-number">03</span>
-					<h3>Join World</h3>
+					<h3>Play</h3>
 					<p>Any player on the same world with TileWhisper is in your voice channel. No invites, no friend requests.</p>
 				</div>
 			</div>
@@ -489,7 +504,7 @@
 					<div class="feature-icon">📍</div>
 					<div class="feature-content">
 						<h3>Proximity Audio</h3>
-						<p>Volume decreases linearly with Chebyshev distance — same math OSRS uses for tile movement. Feels natural.</p>
+						<p>Volume decreases linearly with Chebyshev distance — same math OSRS uses for tile movement. Feels natural in-game.</p>
 					</div>
 				</div>
 				<div class="feature">
@@ -497,6 +512,27 @@
 					<div class="feature-content">
 						<h3>Per-Player Controls</h3>
 						<p>Mute or adjust volume (0–200%) for each player individually. Speaking indicators show who's talking.</p>
+					</div>
+				</div>
+				<div class="feature">
+					<div class="feature-icon">👥</div>
+					<div class="feature-content">
+						<h3>Friends Filtering</h3>
+						<p>Choose proximity-only, friends-only, or friends-within-range modes. Control exactly who you hear.</p>
+					</div>
+				</div>
+				<div class="feature">
+					<div class="feature-icon">🎯</div>
+					<div class="feature-content">
+						<h3>In-Game Overlays</h3>
+						<p>Green microphone icons appear above speaking players in RuneLite — clear visual feedback when someone talks.</p>
+					</div>
+				</div>
+				<div class="feature">
+					<div class="feature-icon">📏</div>
+					<div class="feature-content">
+						<h3>Adjustable Range</h3>
+						<p>Set your hearing range from 1–50 tiles. Default 15 works for most situations; fine-tune for your playstyle.</p>
 					</div>
 				</div>
 				<div class="feature">
@@ -546,11 +582,17 @@
 						</div>
 					</div>
 				</div>
+				<div style="margin-top: 2rem; padding: 1.5rem; background: rgba(212, 168, 23, 0.05); border: 1px solid rgba(212, 168, 23, 0.2); border-radius: 8px;">
+					<p style="color: var(--text-primary); font-size: 0.9rem;">
+						<strong style="color: var(--gold-primary);">🔒 Secure by default:</strong> All connections use encrypted WebSockets (wss://). Voice, position, and username data are encrypted in transit — same security standard used by RuneLite.
+					</p>
+				</div>
 				<p style="margin-top: 1.5rem; color: var(--text-muted); font-size: 0.85rem;">
 					Server source code is public. Both plugin and server are free to use and self-host if you prefer.
 				</p>
 			</div>
 		</section>
+
 
 		<!-- Install CTA -->
 		<section class="install-cta">
@@ -575,6 +617,21 @@
 	</div>
 
 	<script>
+		// Intersection Observer for scroll-triggered animations
+		const observer = new IntersectionObserver((entries) => {
+			entries.forEach(entry => {
+				if (entry.isIntersecting) {
+					entry.target.classList.add('in-view');
+					observer.unobserve(entry.target);
+				}
+			});
+		}, {
+			threshold: 0.1,
+			rootMargin: '0px 0px -50px 0px'
+		});
+
+		document.querySelectorAll('.animate-up').forEach(el => observer.observe(el));
+
 		// Parallax effect on mouse move
 		document.addEventListener('mousemove', (e) => {
 			const layers = document.querySelectorAll('.parallax-layer');
@@ -593,6 +650,22 @@
 		if ('ontouchstart' in window) {
 			document.getElementById('parallax-bg').style.display = 'none';
 		}
+
+		// Live relay stats
+		function updateRelayStats() {
+			fetch('https://relay.tilewhisper.com/api/stats')
+				.then(r => r.json())
+				.then(s => {
+					document.getElementById('stat-players').textContent = s.totalConnections ?? '—';
+					document.getElementById('stat-worlds').textContent = s.activeWorlds ?? '—';
+				})
+				.catch(() => {
+					document.getElementById('stat-players').textContent = '—';
+					document.getElementById('stat-worlds').textContent = '—';
+				});
+		}
+		updateRelayStats();
+		setInterval(updateRelayStats, 5000);
 	</script>
 </body>
 </html>
